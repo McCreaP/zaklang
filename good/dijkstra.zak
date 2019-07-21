@@ -1,0 +1,178 @@
+type Set[T] {
+	EmptySet(),
+	NodeSet(T, Set[T], Set[T])
+}
+
+type Map[K, V] {
+	EmptyMap(),
+	NodeMap(K, V, Map[K, V], Map[K, V])
+}
+
+type List[T] {
+	Nil(),
+	Cons(T, List[T])
+}
+
+type Maybe[T] {
+	Nothing(),
+	Just(T)
+}
+
+type Cmp {
+	Lt(),
+	Eq(),
+	Gt()
+}
+
+type Pair[A, B] {
+	Pair(A, B)
+}
+
+type Vertex {
+	Vertex(int)
+}
+
+type Graph {
+	Graph(Map[Vertex, List[Pair[Vertex, int]]])
+}
+
+def singletonSet(x) = NodeSet(x, EmptySet(), EmptySet())
+
+def memberSet(cmp)(set)(key) = match set {
+	case EmptySet() => false
+	case NodeSet(x, left, right) => match cmp(key, x) {
+		case Lt() => memberSet(cmp)(left)(key)
+		case Eq() => true
+		case Gt() => memberSet(cmp)(right)(key)
+	}
+}
+
+def insertSet(cmp)(set)(key) = match set {
+	case EmptySet() => NodeSet(key, EmptySet(), EmptySet())
+	case NodeSet(x, left, right) => match cmp(key, x) {
+		case Lt() => NodeSet(x, insertSet(cmp)(left)(key), right)
+		case Eq() => NodeSet(x, left, right)
+		case Gt() => NodeSet(x, left, insertSet(cmp)(right)(key))
+	}
+}
+
+def popMinSet(set) = match set {
+	case EmptySet() => Nothing()
+	case NodeSet(x, EmptySet(), right) => Just(Pair(x, right))
+	case NodeSet(x, left, right) => match popMinSet(left) {
+		case Just(Pair(value, left')) => Just(Pair(value, NodeSet(x, left', right)))
+	}
+}
+
+def lookupMap(cmp)(map)(key) = match map {
+	case EmptyMap() => Nothing()
+	case NodeMap(k, v, left, right) => match cmp(key, k) {
+		case Lt() => lookupMap(cmp)(left)(key)
+		case Eq() => Just(v)
+		case Gt() => lookupMap(cmp)(right)(key)
+	}
+}
+
+def insertMap(cmp)(map)(key, value) = match map {
+	case EmptyMap() => NodeMap(key, value, EmptyMap(), EmptyMap())
+	case NodeMap(k, v, left, right) => match cmp(key, k) {
+		case Lt() => NodeMap(k, v, insertMap(cmp)(left)(key, value), right)
+		case Eq() => NodeMap(key, value, left, right)
+		case Gt() => NodeMap(k, v, left, insertMap(cmp)(right)(key, value))
+	}
+}
+
+def map(f)(xs) = match xs {
+	case Nil() => Nil()
+	case Cons(x, xs) => Cons(f(x), map(f)(xs))
+}
+
+def foldl(f)(acc)(xs) = match xs {
+	case Nil() => acc
+	case Cons(x, xs) => foldl(f)(f(acc)(x))(xs)
+}
+
+def vertexCmp(v, v') = match v {
+	case Vertex(x) => match v' {
+		case Vertex(x') => if x < x' then Lt() else if x' < x then Gt() else Eq()
+	}
+}
+
+def costsCmp(x, y) = match x {
+	case Pair(a, b) => match y {
+		case Pair(c, d) => if a < c then Lt() else if c < a then Gt() else vertexCmp(b, d)
+	}
+}
+
+val getLowestCost = popMinSet
+val isVertexVisited = memberSet(vertexCmp)
+val markVertexVisited = insertSet(vertexCmp)
+val updateCost = insertMap(vertexCmp)
+val insertEdge = insertMap(vertexCmp)
+def neighbors(graph)(vertex) = match graph {
+	case Graph(map) => lookupMap(vertexCmp)(map)(vertex)
+}
+val insertCost = insertSet(costsCmp)
+
+def updatePrioQueue(graph, prioQueue, vertex, distance) = {
+	def addDistance(pair) = match pair {
+		case Pair(v, d) => Pair(d + distance, v)
+	}
+	val updatedDistances = match neighbors(graph)(vertex) {
+		case Just(neighbors) => map(addDistance)(neighbors)
+	}
+	foldl(insertCost)(prioQueue)(updatedDistances)
+}
+
+def runDjikstra(graph)(prioQueue, visited, costs) = match getLowestCost(prioQueue) {
+	case Nothing() => costs
+	case Just(Pair(Pair(distance, vertex), prioQueue')) => 
+		if isVertexVisited(visited)(vertex) then
+			runDjikstra(graph)(prioQueue', visited, costs)
+		else {
+			val costs' = updateCost(costs)(vertex, distance)
+			val visited' = markVertexVisited(visited)(vertex)
+			val prioQueue'' = updatePrioQueue(graph, prioQueue', vertex, distance)
+			runDjikstra(graph)(prioQueue'', visited', costs')
+		}
+}
+
+def dijkstra(graph)(startNode) = 
+	runDjikstra(graph)(
+		singletonSet(Pair(0, startNode)), 
+		EmptySet(), 
+		EmptyMap()
+	)
+
+def addDirectEdge(v, edge)(graph) = match graph {
+	case Graph(map) => match neighbors(graph)(v) {
+		case Nothing() => Graph(insertEdge(map)(v, Cons(edge, Nil())))
+		case Just(list) => Graph(insertEdge(map)(v, Cons(edge, list)))
+	}
+}
+
+def bind(f, g)(x) = {
+	val x' = f(x)
+	g(x')
+}
+
+def addEdge(u, v, cost) =
+	bind(addDirectEdge(Vertex(u), (Pair(Vertex(v), cost))),
+		addDirectEdge(Vertex(v), Pair(Vertex(u), cost)))
+
+def main() = {
+	val graph = 
+		bind(addEdge(1, 2, 7),
+		bind(addEdge(1, 3, 9),
+		bind(addEdge(1, 6, 14),
+		bind(addEdge(2, 3, 10),
+		bind(addEdge(2, 4, 15),
+		bind(addEdge(3, 4, 11),
+		bind(addEdge(3, 6, 2),
+		bind(addEdge(4, 5, 6),
+		addEdge(5, 6, 9)))))))))(Graph(EmptyMap()))
+	val costs = dijkstra(graph)(Vertex(1))
+	match lookupMap(vertexCmp)(costs)(Vertex(5)) {
+		case Just(value) => value
+	}
+}

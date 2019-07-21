@@ -1,0 +1,195 @@
+def seven() = 7
+
+def add(x, y) = x + y
+
+def addCurrying(x, y)(z) = x + y + z
+
+val boundedVariable = 42
+def staticBound() = boundedVariable
+
+// @Test: Block
+def block() = {
+	val x = true
+	x
+}
+
+// @Test: Arithmetic operation
+def arithmetic() = {
+	val x = 2 + 2 * 2
+	val y = 2 * 2 + 2
+	x == y
+}
+
+// @Test: Function call without arguments
+def functionCall() = seven() == 7
+
+// @Test: [RESOLVED BUG] Function should be called before arithmetic operation
+def functionCallPrecedence() = seven() + 3 == 10
+
+// @Test: Function call with arguments
+def functionCallWithArgumetns() = add(24, 42) == 66
+
+// @Test: Currying
+def functionCallCurrying() = {
+	val foo = addCurrying(1, 2)
+	val bar = addCurrying(3, 4)
+	foo(5) + bar(6) == 21
+}
+
+// @Test: [RESOLVED BUG] Function name should not shadow binded argument
+def identBounding() = {
+	val x = addCurrying(1, 2)
+	x(3) == 6
+}
+
+// @Test: If then else, condition satisfied
+def itfe() = if true then true else false
+
+// @Test: If then else, condition not satisfied
+def ifte2() = if false then false else true
+
+// @Test: Static bound variable
+def staticBoundTest() = {
+	val boundedVariable = 24
+	staticBound() == 42
+}
+
+val x = 1
+def id(x) = x
+
+// @Test: [RESOLVED BUG] Arguments should be evaluated in current env
+def argsEvaluation() = {
+	val x = 2
+	id(x) == 2
+}
+
+def adder(x, acc) = if x == 0 then acc else adder(x - 1, acc + x)
+
+// @Test: Recurention
+def recurention() = adder(10, 0) == 55
+
+def adderBlock(x, acc) = {
+	val x_ = x - 1
+	val acc_ = acc + x
+	if x == 0 then acc else adderBlock(x_, acc_)
+}
+
+// @Test: Block recurention
+def blockRecurention() = adderBlock(10, 0) == 55
+
+// @Test: Lambda
+def lambda() = {
+	val adder = fun (a, b) => a + b
+	adder(24, 42) == 66
+}
+
+def higherOrderAdd(adder)(a, b) = adder(a, b)
+
+// @Test: Higher-order function
+def higherOrderTest() = higherOrderAdd(fun (a, b) => a + b + 1)(24, 42) == 67
+
+// @Test: Lambda currying
+def lambdaCurrying() = {
+	val lam = fun (a, b)(c) => a + b + c
+	val parialApplicated = lam(1, 2)
+	parialApplicated(3) == 6
+}
+
+type Bool {
+	True(),
+	False()
+}
+
+// @Test: Pattern matching
+def patternMatching() = match False() {
+	case True() => false
+	case False() => true
+}
+
+type Foo {
+	X(int)
+}
+
+// @Test: Pattern matching with param
+def matchinWithParam() = { 
+	val y = match X(5) {
+		case X(x) => x
+	}
+	y == 5
+}
+
+type List[T] {
+	Nil(),
+	Cons(T, List[T])
+}
+
+def containsTheAnswer(l) = match l {
+	case Nil() => false
+	case Cons(42, xs) => true
+	case Cons(x, xs) => containsTheAnswer(xs)
+}
+
+// @Test: Pattern matching with constant
+def containsTheAnswerTest() = {
+	val list = Cons(1, Cons(42, Cons(3, Nil())))
+	containsTheAnswer(list)
+}
+
+
+def length(l) = match l {
+	case Nil() => 0
+	case Cons(x, xs) => 1 + length(xs)
+}
+
+// @Test: Recursive pattern matching
+def lengthTest() = {
+	val l = Cons(1, Cons(2, Cons(3, Nil())))
+	length(l) == 3
+}
+
+def filter(f)(l) = 
+	match l {
+		case Nil() => Nil()
+		case Cons(h, t) => if f(h) then Cons(h, filter(f)(t)) else filter(f)(t)
+	}
+
+// @Test: Filter
+def filterTest() = {
+	val list = Cons(1, Cons(3, Cons(2, Cons(4, Nil()))))
+	val filteredList = filter(fun (a) => 2 < a)(list)
+	length(filteredList) == 2
+}
+
+def second(l) = match l {
+	case Cons(x, Cons(y, z)) => y
+}
+
+// @Test: Nested pattern matching
+def nestedMatching() = {
+	val list = Cons(10, Cons(20, Cons(30, Nil())))
+	second(list) == 20
+}
+
+type X {
+	X(int, int)
+}
+
+def mutlipleVarInPattern() = match X(24, 42) {
+	case X(x, x) => x
+} 
+
+// @Test: [FEATURE] Multiple variable in pattern matching
+def multipleVarsTets() = mutlipleVarInPattern() == 42
+
+def bar(x, y)(z) = x + y + z
+
+def foo() = bar(1, 2)
+
+// @Test: [RESOLVED BUG] Function as resut
+def functionAsResult() = foo()(1) == 4
+
+def adderCurrying(x)(acc) = if x == 0 then acc else adderCurrying(x - 1)(acc + x)
+val parialAdder = adderCurrying(10)
+
+// @Test: [RESOLVED BUG] Currying and recurention
+def curryingInRecurention() = parialAdder(0) == 55

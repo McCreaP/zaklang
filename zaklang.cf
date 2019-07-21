@@ -1,0 +1,52 @@
+comment  "//";
+comment  "/*" "*/";
+
+token TInt '-'?digit+;
+
+entrypoints Program;
+
+Prog.   Program ::= [Decl];
+DFun.    Decl ::= "def" Ident Parameters [Parameters] "=" Exp;
+DVal.    Decl ::= "val" Ident "=" Exp;
+DType.   Decl ::= "type" Type "{" [Constructor] "}";
+
+Params.   Parameters ::= "(" [Ident] ")";
+Type.     Type ::= Ident;
+TypeCtor. Type ::= Ident "[" [Type] "]";
+Ctor.     Constructor ::= Ident "(" [Type] ")";
+
+terminator Decl "";
+separator Ident ",";
+terminator Parameters "";
+separator Constructor ",";
+separator Type ",";
+
+EIfte.  Exp ::= "if" Exp "then" Exp "else" Exp;
+EBlock. Exp ::= "{" [Decl] Exp "}";
+EAbs.   Exp ::= "fun" Parameters [Parameters] "=>" Exp;
+EMatch. Exp ::= "match" Exp "{" [Case] "}";
+Case.   Case ::= "case" Exp "=>" Exp;
+
+Args. Arguments ::= "(" [Exp] ")";
+terminator Arguments "";
+separator Exp ",";
+terminator Case "";
+
+EOr.   Exp ::= Exp2 "||" Exp2;
+EAnd.  Exp ::= Exp2 "&&" Exp2;
+ENot.  Exp ::= "!" Exp2;
+
+ELt.    Exp2 ::= Exp3 "<" Exp3;
+EEq.    Exp2 ::= Exp3 "==" Exp3;
+
+EAdd.   Exp3 ::= Exp3 "+" Exp4;
+ESub.   Exp3 ::= Exp3 "-" Exp4;
+EMul.   Exp4 ::= Exp4 "*" Exp5;
+EDiv.   Exp4 ::= Exp4 "/" Exp5;
+EPow.   Exp6 ::= Exp6 "^" Exp7;
+EInt.   Exp7 ::= TInt;
+ETrue.  Exp7 ::= "true";
+EFalse. Exp7 ::= "false";
+EApp.   Exp7 ::= Ident [Arguments];
+
+coercions Exp 7;

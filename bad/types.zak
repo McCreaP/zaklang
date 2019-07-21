@@ -1,0 +1,69 @@
+// @Types: [SHOUDL FAIL] Function application, wrong number of arguments
+def add(a, b, c) = a + b + c
+def app() = add(2, 3)
+
+// @Types: [SHOULD FAIL] If then else, wrong condition
+val ifte = if 2 + 2 then 42 else 24
+
+// @Types: [SHOULD FAIL] If then else, different types in branches
+val ifte = if true then 42 else false
+
+// @Types: [SHOULD FAIL] Abstraction generalization
+def absGeneralization(id) = {
+	val g = id(true)
+	id(3)
+}
+
+// @Types: [SHOULD FAIL] Cyclic dependency
+def main(x) = x(x)
+
+// @Types: [SHOULD FAIL] Unresolved type
+type List[T] {
+	Nil(),
+	Cons(T, List[A])
+}
+
+// @Types: [SHOULD FAIL] Constructor with wrong number of applications
+type X {
+	Y()
+}
+
+def main() = Y()()
+
+// @Types: [SHOULD FAIL] Constructr wrong number of arguments
+type List[T] {
+	Nil(), 
+	Cons(T, List[T])
+}
+
+val list = Cons(5) 
+
+// @Types: [SHOULD FAIL] wrong constructor types
+type List[T] {
+	Nil(), 
+	Cons(T, List[T])
+}
+
+val list = Cons(1, Cons(true, Nil()))
+
+// @Types: [SHOULD FAIL] Cannot unify types in pattern matching
+type List[T] {
+	Nil(), 
+	Cons(T, List[T])
+}
+
+def main(l) = match l {
+	case Cons(1, Nil()) => 0
+	case Cons(true, Nil()) => 1
+}
+
+// @Types: [SHOULD FAIL] Different types in match branches
+type List[T] {
+	Nil(), 
+	Cons(T, List[T])
+}
+
+def main(l) = match l {
+	case Nil() => 0
+	case Cons(x, xs) => true
+}

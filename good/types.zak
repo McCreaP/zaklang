@@ -1,0 +1,101 @@
+// @Types: Val
+val three = 3
+
+// @Types: Function without argument
+def seven() = 7
+
+// @Types: Function application
+def add(a, b) = a + b
+def app() = add(2, 3)
+
+// @Types: If then else
+val ifte = if true then 42 else 24
+
+// @Types: I
+def I(x) = x
+
+// @Types: K
+def K(x)(y) = x
+
+// @Types: S
+def S(x)(y)(z) = x(z)(y(z))
+
+// @Types: Let generalization
+def letGeneralization() = {
+	def id(x) = x
+	val g = id(true)
+	id(3) == 3 
+}
+
+// @Types: Static bounding
+val theAnswer = 42
+def whatIsTheMeaningOfLife() = theAnswer
+
+def main() = {
+	val theAnswer = true
+	whatIsTheMeaningOfLife()
+}
+
+// @Types: Currying
+def addCurrying(x, y)(z) = x + y + z
+
+// @Types: Recurention
+def add(x, acc) = if x == 0 then acc else add(x - 1, acc + x)
+
+// @Types: Generalization
+def id(x) = x
+def int() = id(3)
+def bool() = id(true)
+
+// @Types: High order function
+def higherOrderAdd(adder)(a, b) = adder(a, b)
+def partialApplication() = higherOrderAdd(fun (a, b) => a + b)
+def main() = higherOrderAdd(fun (a, b) => a + b)(2, 3)
+
+// @Types: User defined type
+type Bool {
+	True(),
+	False()
+}
+
+def main() = True()
+
+// @Types: Polymorphic and recursive types
+type List[T] {
+	Nil(),
+	Cons(T, List[T])
+}
+
+def main() = Cons(1, Cons(2, Nil()))
+
+// @Types: Pattern matching
+type List[T] {
+	Nil(),
+	Cons(T, List[T])
+}
+
+// @Types: Recurention in pattern
+type List[T] {
+	Nil(),
+	Cons(T, List[T])
+}
+
+def length(l) = match l {
+	case Nil() => 0
+	case Cons(x, xs) => 1 + length(xs)
+}
+
+// @Types: Nested types in constructor
+type Foo[T] {
+	Foo(Foo[Foo[T]])
+}
+
+// @Types: [RESOLVED BUG]
+type Set[T] {
+	NodeSet(Set[T])
+}
+
+def insertSet(set) = match true {
+	case true => NodeSet(insertSet(set))
+	case false => NodeSet(set)
+}
