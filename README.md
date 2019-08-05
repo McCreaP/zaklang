@@ -6,28 +6,24 @@ Fully functional programming language, and its interpreter, with a `Scala`-like 
 
 ### Labmda
 ```scala
-def lambda() = {
-	val adder = fun (a, b) => a + b
-	adder(24, 42) == 66
-}
+val adder = fun (a, b) => a + b
+adder(24, 42) == 66
 ```
 
 ### Currying
 ```scala
-def addCurrying(x, y)(z) = x + y + z
+def add(x, y)(z) = x + y + z
 
-def functionCallCurrying() = {
-	val foo = addCurrying(1, 2)
-	val bar = addCurrying(3, 4)
-	foo(5) + bar(6) == 21
-}
+val addThree = add(1, 2)
+val addSeven = add(3, 4)
+addThree(5) + addSeven(6) == 21
 ```
 
 ### Higher order functions
 ```scala
 def higherOrderAdd(adder)(a, b) = adder(a, b)
 
-def higherOrderTest() = higherOrderAdd(fun (a, b) => a + b + 1)(24, 42) == 67
+higherOrderAdd(fun (a, b) => a + b + 1)(24, 42) == 67
 ```
 
 ### Parametric ADT...
@@ -44,10 +40,8 @@ def second(l) = match l {
 	case Cons(x, Cons(y, z)) => y
 }
 
-def nestedMatching() = {
-	val list = Cons(10, Cons(20, Cons(30, Nil())))
-	second(list) == 20
-}
+val list = Cons(10, Cons(20, Cons(30, Nil())))
+second(list) == 20
 ```
 
 ### Type inference
@@ -55,20 +49,21 @@ def nestedMatching() = {
 ```scala
 def S(x)(y)(z) = x(z)(y(z))  // S :: Forall a, b, c. (a -> b -> c) -> (a -> b) -> a -> c 
 
-def letGeneralization() = {
-	def id(x) = x  // id :: Forall a. a -> a
-	val g = id(true)  // g :: Boolean
-	id(3) == 3  // id(3) :: Int
-}
+def id(x) = x  // id :: Forall a. a -> a
+val g = id(true)  // g :: Boolean
+id(3) == 3  // id(3) :: Int
+```
 
+### Type checker
+```scala
 val ifte = if true then 42 else false  // Type error!
-
-def main(x) = x(x)  // Type error!
 
 val list = Cons(1, Cons(true, Nil()))  // Type error!
 
-def main(l) = match l {  // Type error!
-	case Cons(1, Nil()) => 0
-	case Cons(true, Nil()) => 1
+def startsWithTrue(l) = match l {  // Type error!
+	case Cons(1, tail) => true
+	case Cons(false, tail) => false
 }
+
+def omega(x) = x(x)  // Type error!
 ```
