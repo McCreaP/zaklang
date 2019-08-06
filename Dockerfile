@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
 	cabal-install \
 	&& rm -rf /var/lib/apt/lists/*
 
-RUN cabal update && cabal install mtl
+RUN cabal update && cabal install --global mtl
 
 FROM deps as builder
 

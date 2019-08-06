@@ -1,3 +1,6 @@
+UID := $(shell id -u)
+GID := $(shell id -g)
+
 ZAKLANG_IMAGE_NAME = zaklang
 ZAKLANG_IMAGE_TAG = 0.0.1
 
@@ -27,6 +30,7 @@ zaklang: _frotend _build_dir _bin_dir
 
 dev: _build_deps_image
 	docker run --rm -it \
+		-u $(UID):$(GID) \
 		-v $(HOST_REPO_ROOT):$(CONTAINER_REPO_ROOT) \
 		-w $(CONTAINER_REPO_ROOT) \
 		$(ZAKLANG_IMAGE_NAME):$(ZAKLANG_IMAGE_TAG) /bin/bash
