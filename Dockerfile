@@ -14,10 +14,11 @@ RUN cabal update && cabal install mtl
 FROM deps as builder
 
 WORKDIR /opt/zaklang
-COPY . /opt/zaklang
+COPY src /opt/zaklang/src
+COPY Makefile /opt/zaklang
 RUN make zaklang
 
 FROM debian:8.11
 
-COPY --from=builder /opt/zaklang/zaklang /usr/local/bin
+COPY --from=builder /opt/zaklang/bin/zaklang /usr/local/bin
 ENTRYPOINT ["zaklang"]

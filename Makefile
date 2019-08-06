@@ -10,11 +10,20 @@ _build_deps_image:
 _build_zaklang_image:
 	docker build -t $(ZAKLANG_IMAGE_NAME):$(ZAKLANG_IMAGE_TAG) .
 
-zaklang:
-	bnfc -haskell Zaklang.cf
-	happy -gca ParZaklang.y
-	alex -g LexZaklang.x
-	ghc --make Interpreter.hs -o zaklang
+_build_dir:
+	mkdir -p build
+
+_bin_dir:
+	mkdir -p bin
+
+_frotend: _build_dir src/Zaklang.cf
+	cd build \
+	&& bnfc -haskell ../src/Zaklang.cf \
+	&& happy -gca ParZaklang.y \
+	&& alex -g LexZaklang.x
+
+zaklang: _frotend _build_dir _bin_dir
+	ghc -isrc:build -hidir build -odir build --make src/Interpreter.hs -o bin/zaklang
 
 dev: _build_deps_image
 	docker run --rm -it \
@@ -28,7 +37,4 @@ interpret: _build_zaklang_image
 	docker start --attach $(CONTAINER)
 
 clean:
-	-rm -f zaklang typeTest *.log *.aux *.hi *.o *.dvi *.bak *.x *.y \
-		AbsZaklang.hs DocZaklang.tex DocZaklang.txt ErrM.hs LexZaklang.hs \
-		Lexzaklang.hs ParZaklang.hs Parzaklang.hs PrintZaklang.hs \
-		SkelZaklang.hs TestZaklang.hs
+	-rm -rf bin build
