@@ -5,9 +5,11 @@ import os
 
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.dirname(TEST_DIR)
-GOOD_DIR = os.path.join(BASE_DIR, 'good')
+GOOD_DIR = os.path.join(TEST_DIR, 'good')
 
 TEST_BASE_FILE = os.path.join(GOOD_DIR, 'test.zak')
+
+ZAKLANG = os.path.join(BASE_DIR, "bin", "zaklang")
 
 
 def main():
@@ -40,7 +42,7 @@ def runTest(testBase, scenario):
 	print(bcolors.HEADER + "Test: " + bcolors.ENDC + scenario["description"] +
 		(70 - len(scenario["description"])) * " ", end="")
 	testData = prepareTestData(testBase, scenario["functionName"])
-	test = Popen(["./interpreter"], cwd=BASE_DIR, stdout=PIPE, stdin=PIPE, stderr=PIPE)
+	test = Popen([ZAKLANG], cwd=BASE_DIR, stdout=PIPE, stdin=PIPE, stderr=PIPE)
 	testResult = test.communicate(input=testData.encode())
 	if testResult[0] == b"0\n":
 		print(bcolors.OKGREEN + "SUCCESS" + bcolors.ENDC) 
