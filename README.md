@@ -67,3 +67,35 @@ def startsWithTrue(l) = match l {  // Type error!
 
 def omega(x) = x(x)  // Type error!
 ```
+
+## Getting Started
+
+To build the interpreter invoke:
+```
+make all
+```
+It will build the `zaklang` binary in the `bin` directory. 
+
+The [Dockerfile](https://github.com/McCreaP/zaklang/blob/master/Dockerfile) specifies dependencies required to build the interpreter. If your environment doesn't meet those requirements, you can use provided docker development environment available through:
+```
+make dev
+```
+
+After building the interpreter, you can interpret your program with:
+```
+bin/zaklang [FILE]
+```
+If a `FILE` is not specified, stdin will be parsed. Source code must define a `main` function with a signature `() -> Int`. The output of this function will be printed to stdout.
+
+To run the dijkstra example call:
+```
+bin/zaklang example/dijkstra.zak
+```
+It should print `20` to the console.
+
+## Tests
+
+To run tests invoke:
+```
+make test
+```
