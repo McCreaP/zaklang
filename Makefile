@@ -7,6 +7,8 @@ ZAKLANG_IMAGE_TAG = 0.0.1
 HOST_REPO_ROOT := $(shell pwd)
 CONTAINER_REPO_ROOT = /mnt/zaklang
 
+.PHONY: all clean
+
 _build_dir:
 	mkdir -p build
 
@@ -37,6 +39,8 @@ dev: _build_dev_image
 		-v $(HOST_REPO_ROOT):$(CONTAINER_REPO_ROOT) \
 		-w $(CONTAINER_REPO_ROOT) \
 		$(ZAKLANG_IMAGE_NAME):$(ZAKLANG_IMAGE_TAG) /bin/bash
+
+all: zaklang printTypes
 
 clean:
 	-rm -rf bin build
