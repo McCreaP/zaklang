@@ -1,5 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
-module TypeChecker where
+module TypeChecker.TypeChecker where
 import Control.Monad.Error
 import Control.Monad.State
 import Control.Applicative
@@ -11,70 +11,17 @@ import qualified Data.Map as Map
 import AbsZaklang
 import PrintZaklang
 
-data TyVar = TV {name :: String, typeRef :: IORef (Maybe TypeInfer)} deriving (Eq)
+import TypeChecker.Data
+import TypeChecker.FreeTypeVariables
+import TypeChecker.Show
+import TypeChecker.Monad
 
-data TypeInfer = TyVar TyVar | TyCons String [TypeInfer] deriving (Eq, Show)
-data Scheme a = Forall [TyVar] a deriving (Show)
-
-data TyCtor = TC {ident :: Ident, constructedType :: TypeInfer, args :: [TypeInfer]}
-
-data TypeEnv = TypeEnv {typeVarCount :: Int,
-                        types :: Map.Map Ident (Scheme TypeInfer),
-                        ctors :: Map.Map Ident (Scheme TyCtor)}
-type TCM a = ErrorT String (StateT TypeEnv IO) a
 
 tyBool = TyCons "_bool" []
 tyInt = TyCons "_int" []
 tyUnit = TyCons "_unit" []
 tyFun a b = TyCons "=>" [a, b]
 tyProd types = TyCons "*" types
-
-instance Show TyVar where
-    show = name
-
-instance Ord TyVar where
-    compare v v' = compare (name v) (name v')
-
-class ShowTCM a where
-    showTCM :: a -> TCM String
-
-instance ShowTCM TyVar where
-    showTCM v = readTypeRef v >>= \case
-        Just t -> showTCM t
-        Nothing -> return $ name v
-
-instance ShowTCM TypeInfer where
-    showTCM (TyVar v) = showTCM v
-    showTCM (TyCons "=>" [a, b]) = do
-        s1 <- showTCM a
-        s2 <- showTCM b
-        return $ "(" ++ s1 ++ " => " ++ s2 ++ ")"
-    showTCM (TyCons "*" [x]) = showTCM x
-    showTCM (TyCons "*" types) = do
-        xs <- mapM showTCM types
-        return $ "(" ++ showStrings xs ++ ")"
-    showTCM (TyCons name []) = return name
-    showTCM (TyCons name types) = do
-        xs <- mapM showTCM types
-        return $ name ++ " [" ++ showStrings xs ++ "]"
-
-instance ShowTCM TyCtor where
-    showTCM (TC (Ident name) t args) = do
-        s <- mapM showTCM args
-        s' <- showTCM t
-        return $ "(" ++ showStrings s ++ ") => " ++ s'
-
-showStrings [] = ""
-showStrings (x:xs) = x ++ showRemainingStrings xs
-  where
-    showRemainingStrings [] = ""
-    showRemainingStrings (x:xs) = ", " ++ x ++ showRemainingStrings xs
-
-instance (ShowTCM a) => ShowTCM (Scheme a) where
-    showTCM (Forall tvs t) = do
-        boundedVars <- mapM showTCM tvs
-        s <- showTCM t
-        return $ "Forall " ++ showStrings boundedVars ++ ". " ++ s
 
 unify :: TypeInfer -> TypeInfer -> TCM ()
 unify (TyVar v) t = bind v t
@@ -116,31 +63,6 @@ fresh = do
     env <- get
     put env{typeVarCount = typeVarCount env + 1}
     return $ TyVar $ TV (letters !! typeVarCount env) ref
-
-readTypeRef :: TyVar -> TCM (Maybe TypeInfer)
-readTypeRef v = liftIO $ readIORef (typeRef v)
-
-class Ftv a where
-    ftv :: a -> TCM (Set.Set TyVar)
-
-instance Ftv TyVar where
-    ftv v = readTypeRef v >>= \case
-        Just t -> ftv t
-        Nothing -> return $ Set.singleton v
-
-instance Ftv TypeInfer where
-    ftv (TyVar v) = ftv v
-    ftv (TyCons _ types) = ftv types
-
-instance Ftv TyCtor where
-    ftv (TC _ constructedType args) = liftM2 Set.union (ftv args) (ftv constructedType)
-
-instance Ftv a => Ftv (Scheme a) where
-    ftv (Forall tvs t) = ftv t >>= return . flip Set.difference (Set.fromList tvs) -- ftv tvs
-
-instance Ftv a => Ftv [a] where
-    ftv types = union $ mapM ftv types
-        where union xs = xs >>= return . foldr Set.union Set.empty
 
 ftvEnv :: TCM (Set.Set TyVar)
 ftvEnv = gets types >>= ftv . Map.elems

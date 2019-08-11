@@ -20,7 +20,7 @@ _frotend: _build_dir src/Zaklang.cf
 	&& alex -g LexZaklang.x
 
 zaklang: _frotend _build_dir _bin_dir
-	ghc -isrc:build -hidir build -odir build --make src/Interpreter.hs -o bin/zaklang
+	ghc -isrc:build -hidir build -odir build --make src/Main.hs -o bin/zaklang
 
 printTypes: _frotend _build_dir _bin_dir
 	ghc -isrc:build -hidir build -odir build --make test/PrintTypes.hs -o bin/printTypes

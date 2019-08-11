@@ -13,7 +13,9 @@ import AbsZaklang
 
 import ErrM
 
-import TypeChecker
+import TypeChecker.Show
+import TypeChecker.Monad
+import TypeChecker.TypeChecker
 
 main :: IO ()
 main = do
