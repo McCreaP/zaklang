@@ -7,7 +7,7 @@ ZAKLANG_IMAGE_TAG = 0.0.1
 HOST_REPO_ROOT := $(shell pwd)
 CONTAINER_REPO_ROOT = /mnt/zaklang
 
-.PHONY: all clean
+.PHONY: all clean test dev
 
 _build_dir:
 	mkdir -p build
