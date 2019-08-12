@@ -31,7 +31,7 @@ usage :: IO ()
 usage = do
     progName <- getProgName
     putStrLn $ unlines
-        ["usage: ./" ++ progName ++ "[file]"
+        ["usage: ./" ++ progName ++ " [file]"
         ,"file      file with a source code"
         , "If file is not specifier, parse stdin"
         ]

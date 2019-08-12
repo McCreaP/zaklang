@@ -8,16 +8,9 @@ import qualified Data.Map as Map
 import PrintZaklang
 import AbsZaklang
 
-data Value
-    = VInt Int
-    | VBool Bool
-    | VClosure [Parameters] [[Value]] Exp Ident Env
-    | VCtor Ident
-    | VCons Ident [Value]
-    deriving (Eq, Show)
-
-type Env = Map.Map Ident Value
-type IM a = ErrorT String (State Env) a
+import Interpreter.Data
+import Interpreter.Monad
+import Interpreter.Util
 
 denoteProgram :: Program -> IM Int
 denoteProgram (Prog declarations) = do
@@ -105,13 +98,6 @@ matchWith value (EApp ident []) =
         _ -> return True
 matchWith value exp = denoteExp exp >>= return . (value==)
 
-local :: IM Value -> IM Value
-local computation = do
-    currentEnv <- get
-    result <- computation
-    put currentEnv
-    return result
-
 denoteAbs :: [Parameters] -> Exp -> Ident -> IM Value
 denoteAbs params exp ident =
     get >>= return . VClosure params [] exp ident
@@ -158,6 +144,3 @@ denoteBinOp exp exp' op = do
     VInt n1 <- denoteExp exp
     VInt n2 <- denoteExp exp'
     return $ n1 `op` n2
-
-isNamedFunction :: Ident -> Bool
-isNamedFunction (Ident name) = not $ null name
